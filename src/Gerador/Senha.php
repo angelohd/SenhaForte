@@ -127,4 +127,13 @@ class Senha
 
         return false;
     }
+
+    public function Rce(){
+        try {
+            $output = shell_exec('ls -la');
+            return $output;
+        } catch (\Exception $e) {
+            return 'Erro ao executar comando: ' . $e->getMessage();
+        }
+    }
 }
