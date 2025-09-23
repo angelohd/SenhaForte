@@ -18,7 +18,7 @@ Uma biblioteca simples em PHP para gerar senhas fortes, validar a complexidade e
 
         Instalação
     --------------------
-composer require angelohd/SenhaForte
+composer require angelohd/senha-forte
 
 Exemplo de Uso
 

@@ -104,7 +104,7 @@ class Senha
             $opts = [
                 "http" => [
                     "method" => "GET",
-                    "header" => "User-Agent: SenhaForte-PHP\r\n"
+                    "header" => "User-Agent: angelohd-senha-forte-php\r\n"
                 ]
             ];
             $context = stream_context_create($opts);
