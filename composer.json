@@ -1,13 +1,8 @@
 {
-  "name": "seuusuario/senha-forte",
-  "description": "Gerador e verificador de senhas fortes em PHP",
+  "name": "angelohd/senha-forte",
+  "description": "Gerador e verificador de senhas fortes (com verificação HIBP + cache).",
   "type": "library",
   "license": "MIT",
-  "autoload": {
-    "psr-4": {
-      "Gerador\\": "src/Gerador/"
-    }
-  },
   "authors": [
     {
       "name": "Ângelo N. Mwadiavita",
@@ -16,5 +11,12 @@
   ],
   "require": {
     "php": ">=7.4"
-  }
+  },
+  "autoload": {
+    "psr-4": {
+      "Gerador\\": "src/Gerador/"
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
 }
