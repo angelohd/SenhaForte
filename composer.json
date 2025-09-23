@@ -1,0 +1,20 @@
+{
+  "name": "seuusuario/senha-forte",
+  "description": "Gerador e verificador de senhas fortes em PHP",
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Gerador\\": "src/Gerador/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Ângelo N. Mwadiavita",
+      "email": "amwadiavita@ndaysystem.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.4"
+  }
+}
