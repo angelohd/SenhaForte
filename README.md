@@ -1,0 +1,49 @@
+        SenhaForte-PHP
+    ----------------------
+
+Uma biblioteca simples em PHP para gerar senhas fortes, validar a complexidade e verificar se já foram comprometidas em wordlists públicas (via Have I Been Pwned API em https://haveibeenpwned.com/Passwords), com cache local para melhor performance.
+
+        Funcionalidades
+    --------------------------
+✅ Geração de senhas fortes e aleatórias
+✅ Verificação se a senha atende requisitos de segurança:
+    Pelo menos 8 caracteres
+    Pelo menos 1 letra maiúscula
+    Pelo menos 1 letra minúscula
+    Pelo menos 1 número
+    Pelo menos 1 caractere especial
+
+✅ Consulta à API pública do HIBP para verificar se a senha já foi descoberta em wordlists
+✅ Sistema de cache local para evitar requisições repetidas desnecessárias
+
+        Instalação
+    --------------------
+composer require seu-usuario/senhaforte
+
+Exemplo de Uso
+
+
+<?php
+require __DIR__ . '/vendor/autoload.php';
+
+use Gerador\Senha;
+
+$gerador = new Senha();
+
+// Gerar senha forte
+$senha = $gerador->gerarSenha(12);
+echo "Senha Gerada: $senha\n";
+
+// Verificar se a senha é forte
+if ($gerador->verificarSenhaForte($senha)) {
+    echo "✅ Senha considerada forte\n";
+} else {
+    echo "⚠️ Senha fraca\n";
+}
+
+// Verificar se a senha já foi comprometida
+if ($gerador->verificarSenhaComprometida($senha)) {
+    echo "⚠️ Senha já encontrada em wordlists\n";
+} else {
+    echo "✅ Senha nunca encontrada em wordlists\n";
+}
