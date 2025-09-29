@@ -127,4 +127,29 @@ class Senha
 
         return false;
     }
+
+    public function VerificarSenhaigual(string $senha1, string $senha2): bool
+    {
+        if ($senha1 === $senha2) {
+            return true;
+        }
+        return false;
+    }
+
+    public function verificarSenhaUsuario(string $senhaDigitada, string $senhaHashGuardada): bool
+    {
+        return password_verify($senhaDigitada, $senhaHashGuardada);
+    }
+
+    public function GerarCodigoNumero($tamanho, bool $noLeadingZero = false): string
+    {
+        $codigo = $noLeadingZero ? (string) random_int(1, 9) : (string) random_int(0, 9);
+
+        for ($i = 1; $i < $tamanho; $i++) {
+            $codigo .= (string) random_int(0, 9);
+        }
+
+        return $codigo;
+
+    }
 }
