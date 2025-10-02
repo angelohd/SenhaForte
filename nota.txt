@@ -1,0 +1,2 @@
+# Cria nova versão (tag semântica)
+git tag v1.0.1
