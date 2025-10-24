@@ -6,7 +6,6 @@ namespace Gerador;
 class Senha
 {
     private string $cacheDir;
-
     public function __construct(string $cacheDir = __DIR__ . '/../../cache')
     {
         $this->cacheDir = $cacheDir;

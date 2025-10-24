@@ -9,6 +9,12 @@
       "email": "amwadiavita@ndaysystem.com"
     }
   ],
+  "extra": {
+    "social": {
+      "github": "https://github.com/angelohd",
+      "linkedin": "https://www.linkedin.com/in/angelo-mwadiavita-446843183/"
+    }
+  },
   "require": {
     "php": ">=7.4"
   },
