@@ -1,11 +1,25 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Gerador;
 
+/**
+ * Classe responsável pela geração, validação e verificação de senhas fortes.
+ * Inclui verificação contra senhas comprometidas via API do HaveIBeenPwned (HIBP).
+ *
+ * @author
+ * @license MIT
+ */
 class Senha
 {
     private string $cacheDir;
+
+    private const MAIUSCULAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    private const MINUSCULAS = 'abcdefghijklmnopqrstuvwxyz';
+    private const NUMEROS = '0123456789';
+    private const ESPECIAIS = '!@#$%^&*()-_=+[]{}|;:,.<>?/';
+
     public function __construct(string $cacheDir = __DIR__ . '/../../cache')
     {
         $this->cacheDir = $cacheDir;
@@ -15,140 +29,193 @@ class Senha
         }
     }
 
-    private const MAIUSCULAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    private const MINUSCULAS = 'abcdefghijklmnopqrstuvwxyz';
-    private const NUMEROS = '0123456789';
-    private const ESPECIAIS = '!@#$%^&*()-_=+[]{}|;:,.<>?/';
-
-    public function gerarSenha(int $tamanho = 8): string
+    /**
+     * Gera uma senha forte com o tamanho especificado.
+     */
+    public function gerarSenha(int $tamanho = 12): string
     {
         if ($tamanho < 8) {
             $tamanho = 8;
         }
 
-        $maiusculas = self::MAIUSCULAS;
-        $minusculas = self::MINUSCULAS;
-        $numeros = self::NUMEROS;
-        $especiais = self::ESPECIAIS;
-
-        // Garantir pelo menos 1 de cada tipo
         $senha = '';
-        $senha .= $maiusculas[random_int(0, strlen($maiusculas) - 1)];
-        $senha .= $minusculas[random_int(0, strlen($minusculas) - 1)];
-        $senha .= $numeros[random_int(0, strlen($numeros) - 1)];
-        $senha .= $especiais[random_int(0, strlen($especiais) - 1)];
+        $senha .= self::MAIUSCULAS[random_int(0, strlen(self::MAIUSCULAS) - 1)];
+        $senha .= self::MINUSCULAS[random_int(0, strlen(self::MINUSCULAS) - 1)];
+        $senha .= self::NUMEROS[random_int(0, strlen(self::NUMEROS) - 1)];
+        $senha .= self::ESPECIAIS[random_int(0, strlen(self::ESPECIAIS) - 1)];
 
-        $todos = $maiusculas . $minusculas . $numeros . $especiais;
-        for ($i = strlen($senha); $i < $tamanho; $i++) {
+        $todos = self::MAIUSCULAS . self::MINUSCULAS . self::NUMEROS . self::ESPECIAIS;
+        while (strlen($senha) < $tamanho) {
             $senha .= $todos[random_int(0, strlen($todos) - 1)];
         }
 
-        // usar shuffle seguro: str_shuffle é aceitável aqui (não criptográfico),
-        // mas para melhor aleatoriedade podemos embaralhar manualmente:
+        // Embaralhar usando Fisher-Yates com random_int()
         $senhaArray = preg_split('//u', $senha, -1, PREG_SPLIT_NO_EMPTY);
-        // Fisher-Yates embaralhamento usando random_int
         $n = count($senhaArray);
         for ($i = $n - 1; $i > 0; $i--) {
             $j = random_int(0, $i);
-            $tmp = $senhaArray[$i];
-            $senhaArray[$i] = $senhaArray[$j];
-            $senhaArray[$j] = $tmp;
+            [$senhaArray[$i], $senhaArray[$j]] = [$senhaArray[$j], $senhaArray[$i]];
         }
 
         return implode('', $senhaArray);
     }
 
+    /**
+     * Gera várias senhas de uma vez.
+     */
+    public function gerarVariasSenhas(int $quantidade, int $tamanho = 12): array
+    {
+        $senhas = [];
+        for ($i = 0; $i < $quantidade; $i++) {
+            $senhas[] = $this->gerarSenha($tamanho);
+        }
+        return $senhas;
+    }
+
+    /**
+     * Verifica se a senha é forte segundo regras padrão.
+     */
     public function verificarSenhaForte(string $senha): bool
     {
-        if (strlen($senha) < 8) {
-            return false;
-        }
+        return $this->validarPoliticaSenha($senha, 8, true);
+    }
 
-        if (!preg_match('/[A-Z]/', $senha)) {
+    /**
+     * Valida a senha conforme política configurável.
+     */
+    public function validarPoliticaSenha(string $senha, int $minimo = 12, bool $simbolosObrigatorios = true): bool
+    {
+        if (strlen($senha) < $minimo)
             return false;
-        }
-
-        if (!preg_match('/[a-z]/', $senha)) {
+        if (!preg_match('/[A-Z]/', $senha))
             return false;
-        }
-
-        if (!preg_match('/[0-9]/', $senha)) {
+        if (!preg_match('/[a-z]/', $senha))
             return false;
-        }
-
-        if (!preg_match('/[!@#$%^&*()\-_=+\[\]{}|;:,.<>?\/]/', $senha)) {
+        if (!preg_match('/[0-9]/', $senha))
             return false;
-        }
-
+        if ($simbolosObrigatorios && !preg_match('/[!@#$%^&*()\-_=+\[\]{}|;:,.<>?\/]/', $senha))
+            return false;
         return true;
     }
 
     /**
-     * Verifica se a senha já apareceu em wordlists públicas (HIBP)
-     * Usa cache local para evitar consultas repetidas
+     * Pontua a força da senha (0 a 6).
      */
-    public function verificarSenhaComprometida(string $senha): bool
+    public function pontuarSenha(string $senha): int
     {
-        $hash = strtoupper(sha1($senha));
-        $prefix = substr($hash, 0, 5);
-        $suffix = substr($hash, 5);
-
-        $cacheFile = $this->cacheDir . "/{$prefix}.cache";
-
-        // Se já temos cache, lê dele
-        if (file_exists($cacheFile) && time() - filemtime($cacheFile) < 86400) {
-            $resposta = file_get_contents($cacheFile);
-        } else {
-            $url = "https://api.pwnedpasswords.com/range/" . $prefix;
-            $opts = [
-                "http" => [
-                    "method" => "GET",
-                    "header" => "User-Agent: angelohd-senha-forte-php\r\n"
-                ]
-            ];
-            $context = stream_context_create($opts);
-            $resposta = file_get_contents($url, false, $context);
-
-            if ($resposta === false) {
-                throw new \Exception("Erro ao consultar API HIBP");
-            }
-
-            file_put_contents($cacheFile, $resposta);
-        }
-
-        // Verifica se o sufixo está na resposta
-        foreach (explode("\n", $resposta) as $linha) {
-            [$hashSuffix, $count] = explode(":", trim($linha));
-            if ($hashSuffix === $suffix) {
-                return true; // senha comprometida
-            }
-        }
-
-        return false;
+        $score = 0;
+        if (strlen($senha) >= 8)
+            $score++;
+        if (strlen($senha) >= 12)
+            $score++;
+        if (preg_match('/[A-Z]/', $senha))
+            $score++;
+        if (preg_match('/[a-z]/', $senha))
+            $score++;
+        if (preg_match('/[0-9]/', $senha))
+            $score++;
+        if (preg_match('/[!@#$%^&*()\-_=+\[\]{}|;:,.<>?\/]/', $senha))
+            $score++;
+        return $score;
     }
 
-    public function VerificarSenhaigual(string $senha1, string $senha2): bool
+    /**
+     * Gera um hash seguro da senha.
+     */
+    public function gerarHash(string $senha): string
     {
-        if ($senha1 === $senha2) {
-            return true;
-        }
-        return false;
+        return password_hash($senha, PASSWORD_DEFAULT);
     }
 
+    /**
+     * Verifica se a senha digitada corresponde ao hash armazenado.
+     */
     public function verificarSenhaUsuario(string $senhaDigitada, string $senhaHashGuardada): bool
     {
         return password_verify($senhaDigitada, $senhaHashGuardada);
     }
 
-    public function GerarCodigoNumero($tamanho, bool $noLeadingZero = false): string
+    /**
+     * Compara duas senhas com segurança contra timing attacks.
+     */
+    public function verificarSenhaIgual(string $senha1, string $senha2): bool
     {
-        $codigo = $noLeadingZero ? (string) random_int(1, 9) : (string) random_int(0, 9);
+        return hash_equals($senha1, $senha2);
+    }
+
+    /**
+     * Verifica se a senha foi comprometida (HIBP API).
+     * Retorna true se a senha já foi encontrada em leaks públicos.
+     */
+    public function verificarSenhaComprometida(string $senha): bool
+    {
+        try {
+            $hash = strtoupper(sha1($senha));
+            $prefix = substr($hash, 0, 5);
+            $suffix = substr($hash, 5);
+
+            $cacheFile = $this->cacheDir . "/{$prefix}.cache";
+
+            if (file_exists($cacheFile) && time() - filemtime($cacheFile) < 86400) {
+                $resposta = file_get_contents($cacheFile);
+            } else {
+                $url = "https://api.pwnedpasswords.com/range/" . $prefix;
+                $opts = [
+                    "http" => [
+                        "method" => "GET",
+                        "header" => "User-Agent: ndaysystem-gerador-senha\r\n"
+                    ]
+                ];
+                $context = stream_context_create($opts);
+                $resposta = @file_get_contents($url, false, $context);
+
+                if ($resposta === false) {
+                    throw new \Exception("Erro ao consultar API HaveIBeenPwned");
+                }
+
+                file_put_contents($cacheFile, $resposta);
+            }
+
+            foreach (explode("\n", $resposta) as $linha) {
+                if (trim($linha) === '')
+                    continue;
+                [$hashSuffix, $count] = explode(':', trim($linha));
+                if ($hashSuffix === $suffix) {
+                    return true;
+                }
+            }
+
+            return false;
+        } catch (\Throwable $th) {
+            //return $th;
+        }
+    }
+
+    /**
+     * Remove caches antigos da API HIBP.
+     */
+    public function limparCacheAntigo(int $dias = 7): void
+    {
+        foreach (glob($this->cacheDir . '/*.cache') as $arquivo) {
+            if (time() - filemtime($arquivo) > ($dias * 86400)) {
+                unlink($arquivo);
+            }
+        }
+    }
+
+    /**
+     * Gera um código numérico aleatório (ex: OTP, token, etc.)
+     */
+    public function gerarCodigoNumero(int $tamanho, bool $noLeadingZero = false): string
+    {
+        $codigo = $noLeadingZero
+            ? (string) random_int(1, 9)
+            : (string) random_int(0, 9);
 
         for ($i = 1; $i < $tamanho; $i++) {
             $codigo .= (string) random_int(0, 9);
         }
 
         return $codigo;
-
     }
 }
