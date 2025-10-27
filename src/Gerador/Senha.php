@@ -18,7 +18,7 @@ class Senha
     private const MAIUSCULAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     private const MINUSCULAS = 'abcdefghijklmnopqrstuvwxyz';
     private const NUMEROS = '0123456789';
-    private const ESPECIAIS = '!@#$%^&*()-_=+[]{}|;:,.<>?/';
+    private const ESPECIAIS = '!@#$%^&*()-_=+[]{}|;:,.<>?/£';
 
     public function __construct(string $cacheDir = __DIR__ . '/../../cache')
     {
@@ -187,7 +187,7 @@ class Senha
 
             return false;
         } catch (\Throwable $th) {
-            //return $th;
+            return false;
         }
     }
 
