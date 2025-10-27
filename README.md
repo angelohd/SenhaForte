@@ -21,29 +21,4 @@ Uma biblioteca simples em PHP para gerar senhas fortes, validar a complexidade e
 composer require seu-usuario/senhaforte
 
 Exemplo de Uso
-
-
-<?php
-require __DIR__ . '/vendor/autoload.php';
-
-use Gerador\Senha;
-
-$gerador = new Senha();
-
-// Gerar senha forte
-$senha = $gerador->gerarSenha(12);
-echo "Senha Gerada: $senha\n";
-
-// Verificar se a senha é forte
-if ($gerador->verificarSenhaForte($senha)) {
-    echo "✅ Senha considerada forte\n";
-} else {
-    echo "⚠️ Senha fraca\n";
-}
-
-// Verificar se a senha já foi comprometida
-if ($gerador->verificarSenhaComprometida($senha)) {
-    echo "⚠️ Senha já encontrada em wordlists\n";
-} else {
-    echo "✅ Senha nunca encontrada em wordlists\n";
-}
+ver arquivo teste/teste.php
