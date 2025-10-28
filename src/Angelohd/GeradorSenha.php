@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Gerador;
+namespace Angelohd;
 
 /**
  * Classe responsável pela geração, validação e verificação de senhas fortes.
@@ -11,7 +11,7 @@ namespace Gerador;
  * @author
  * @license MIT
  */
-class Senha
+class GeradorSenha
 {
     private string $cacheDir;
 
@@ -50,7 +50,8 @@ class Senha
         }
 
         // Embaralhar usando Fisher-Yates com random_int()
-        $senhaArray = preg_split('//u', $senha, -1, PREG_SPLIT_NO_EMPTY);
+        //$senhaArray = preg_split('//u', $senha, -1, PREG_SPLIT_NO_EMPTY);
+        $senhaArray = preg_split('//u', $senha, -1, PREG_SPLIT_NO_EMPTY) ?: str_split($senha);
         $n = count($senhaArray);
         for ($i = $n - 1; $i > 0; $i--) {
             $j = random_int(0, $i);

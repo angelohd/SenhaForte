@@ -20,7 +20,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Gerador\\": "src/Gerador/"
+      "Angelohd\\": "src/Angelohd/"
     }
   },
   "minimum-stability": "stable",

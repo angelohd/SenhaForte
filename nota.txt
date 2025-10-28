@@ -1,3 +1,10 @@
+listar tag
+git tag
+remover tag localmente
+git tag -d v1.0.1
+remover tag online
+git push origin :refs/tags/v1.0.1
+
 https://packagist.org/packages/angelohd
 # Cria nova versão (tag semântica)
 git tag v1.0.0
