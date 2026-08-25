@@ -1,20 +1,16 @@
         SenhaForte-PHP
     ----------------------
 
-Uma biblioteca simples em PHP para gerar senhas fortes, validar a complexidade e verificar se já foram comprometidas em wordlists públicas (via Have I Been Pwned API em https://haveibeenpwned.com/Passwords), com cache local para melhor performance.
+Uma biblioteca simples em PHP para gerar senhas fortes, validar a complexidade e verificar se ja foram comprometidas em wordlists publicas (via Have I Been Pwned API em https://haveibeenpwned.com/Passwords), com cache local para melhor performance.
 
         Funcionalidades
     --------------------------
-✅ Geração de senhas fortes e aleatórias
-✅ Verificação se a senha atende requisitos de segurança:
-    Pelo menos 8 caracteres
-    Pelo menos 1 letra maiúscula
-    Pelo menos 1 letra minúscula
-    Pelo menos 1 número
-    Pelo menos 1 caractere especial
-
-✅ Consulta à API pública do HIBP para verificar se a senha já foi descoberta em wordlists
-✅ Sistema de cache local para evitar requisições repetidas desnecessárias
+Geração de senhas fortes e aleatórias (minimo 12 caracteres)
+Validação de complexidade com política configurável
+Verificação contra senhas comprometidas (HIBP API)
+Cache local com expiração de 24h para performance
+Geração de hashing seguro (Argon2i / Bcrypt)
+Códigos numéricos aleatórios (OTP)
 
         Instalação
     --------------------
@@ -22,28 +18,47 @@ composer require angelohd/senha-forte
 
 Exemplo de Uso
 
-
 <?php
 require __DIR__ . '/vendor/autoload.php';
 
-use Gerador\Senha;
+use Angelohd\GeradorSenha;
 
-$gerador = new Senha();
+$gerador = new GeradorSenha();
 
 // Gerar senha forte
-$senha = $gerador->gerarSenha(12);
+$senha = $gerador->gerarSenha(16);
 echo "Senha Gerada: $senha\n";
 
-// Verificar se a senha é forte
+// Verificar se a senha e forte
 if ($gerador->verificarSenhaForte($senha)) {
-    echo "✅ Senha considerada forte\n";
+    echo "Senha considerada forte\n";
 } else {
-    echo "⚠️ Senha fraca\n";
+    echo "Senha fraca\n";
 }
 
-// Verificar se a senha já foi comprometida
-if ($gerador->verificarSenhaComprometida($senha)) {
-    echo "⚠️ Senha já encontrada em wordlists\n";
-} else {
-    echo "✅ Senha nunca encontrada em wordlists\n";
+// Pontuar forca (0 a 10)
+$score = $gerador->pontuarSenha($senha);
+echo "Pontuacao: {$score}/10\n";
+
+// Gerar hash seguro
+$hash = $gerador->gerarHash($senha);
+echo "Hash: $hash\n";
+
+// Verificar senha contra hash
+$valida = $gerador->verificarSenhaUsuario($senha, $hash);
+echo "Senha valida: " . ($valida ? 'sim' : 'nao') . "\n";
+
+// Verificar se a senha ja foi comprometida
+try {
+    if ($gerador->verificarSenhaComprometida($senha)) {
+        echo "Senha encontrada em leaks publicos!\n";
+    } else {
+        echo "Senha segura (nao encontrada em leaks).\n";
+    }
+} catch (\RuntimeException $e) {
+    echo "Erro ao consultar HIBP: " . $e->getMessage() . "\n";
 }
+
+// Gerar codigo OTP
+$otp = $gerador->gerarCodigoNumero(6, true);
+echo "OTP: $otp\n";
